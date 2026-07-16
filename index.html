@@ -1,0 +1,1338 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/L.Control.Locate.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet.photon.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title>Peta Sebaran Fasilitas Kesehatan di Kabupaten Probolinggo</title>
+       </head>
+    <body>
+<marquee behavior="scroll" direction="left" scrollamount="6" style="color: #800080; font-weight: bold; font-size: 22px; background-color: rgba(255, 255, 255, 0.85); padding: 12px 0px; position: absolute; top: 0; left: 0; z-index: 1000; width: 100%; border-bottom: 1px solid #ccc; box-shadow: 0px 2px 5px rgba(0,0,0,0.1);">
+            PETA SEBARAN FASILITAS KESEHATAN DI KABUPATEN PROBOLINGGO - DINDA AZIZAH ATALLAHSYAH 11231010000042 - PEMINATAN EPIDEMIOLOGI
+        </marquee>
+
+        <div id="map">
+        </div>
+
+<audio controls loop style="position:absolute;bottom:50px;left:30px;z-index:9999;">
+    <source src="audio/backsound.mp3" type="audio/mpeg">
+</audio>
+
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/multi-style-layer.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet.photon.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="data/KecamatanProbolinggo_1.js"></script>
+        <script src="data/Fasyankes_2.js"></script>
+        <script>
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[-8.061511590980352,112.89094781017423],[-7.657963748153104,113.71146712469616]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/qgis2web/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // modify popup if contains media
+        function addClassToPopupIfMedia(content, popup) {
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            var imgTd = tempDiv.querySelector('td img');
+            if (imgTd) {
+                var src = imgTd.getAttribute('src');
+                if (/\.(jpg|jpeg|png|gif|bmp|webp|avif)$/i.test(src)) {
+                    popup._contentNode.classList.add('media');
+                    setTimeout(function() {
+                        popup.update();
+                    }, 10);
+                } else if (/\.(mp3|wav|ogg|aac)$/i.test(src)) {
+                    var audio = document.createElement('audio');
+                    audio.controls = true;
+                    audio.src = src;
+                    imgTd.parentNode.replaceChild(audio, imgTd);
+                    popup._contentNode.classList.add('media');
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else if (/\.(mp4|webm|ogg|mov)$/i.test(src)) {
+                    var video = document.createElement('video');
+                    video.controls = true;
+                    video.src = src;
+                    video.style.width = "400px";
+                    video.style.height = "300px";
+                    video.style.maxHeight = "60vh";
+                    video.style.maxWidth = "60vw";
+                    imgTd.parentNode.replaceChild(video, imgTd);
+                    popup._contentNode.classList.add('media');
+                    // Aggiorna il popup quando il video carica i metadati
+                    video.addEventListener('loadedmetadata', function() {
+                        popup.update();
+                    });
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else {
+                    popup._contentNode.classList.remove('media');
+                }
+            } else {
+                popup._contentNode.classList.remove('media');
+            }
+        }
+        var title = new L.Control({'position':'bottomleft'});
+        title.onAdd = function (map) {
+            this._div = L.DomUtil.create('div', 'info');
+            this.update();
+            return this._div;
+        };
+        title.update = function () {
+            this._div.innerHTML = '<h2>Peta Sebaran Fasilitas Kesehatan di Kabupaten Probolinggo</h2>';
+        };
+        title.addTo(map);
+        var abstract = new L.Control({'position':'topright'});
+        abstract.onAdd = function (map) {
+            this._div = L.DomUtil.create('div',
+            'leaflet-control abstract');
+            this._div.id = 'abstract'
+                this._div.setAttribute("onmouseenter", "abstract.show()");
+                this._div.setAttribute("onmouseleave", "abstract.hide()");
+                this.hide();
+                return this._div;
+            };
+            abstract.hide = function () {
+                this._div.classList.remove("abstractUncollapsed");
+                this._div.classList.add("abstract");
+                this._div.innerHTML = 'i'
+            }
+            abstract.show = function () {
+                this._div.classList.remove("abstract");
+                this._div.classList.add("abstractUncollapsed");
+                this._div.innerHTML = 'Peta ini menyajikan informasi sebaran fasilitas kesehatan (faskes) di Kabupaten Probolinggo yang dapat dieksplorasi secara interaktif. Klik setiap ikon faskes untuk melihat informasi lokasi dan dokumentasi yang tersedia.<br /><br />Sumber Data:<br />- Google Maps (Lokasi Faskes)<br />- Peta Rupa Bumi Indonesia (Batas Kecamatan) - Badan Informasi Geospasial<br /><br />Dibuat oleh:<br />Dinda Azizah Atallahsyah<br />NIM : 11231010000042<br />Program Studi Kesehatan Masyarakat<br />Fakultas Ilmu Kesehatan<br />Peminatan Epidemiologi<br />UIN Syarif Hidayatullah Jakarta<br /><br />Petunjuk penggunaan:<br />- Klik ikon faskes untuk melihat informasi lokasi.<br />- Gunakan fitur Search untuk mencari nama faskes.<br />- Gunakan Measure untuk mengukur jarak dan luas.<br />- Gunakan tombol Layer untuk mengaktifkan atau menonaktifkan layer peta.';
+        };
+        abstract.addTo(map);
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_GoogleSatellite_0');
+        map.getPane('pane_GoogleSatellite_0').style.zIndex = 400;
+        var layer_GoogleSatellite_0 = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleSatellite_0',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+        });
+        layer_GoogleSatellite_0;
+        map.addLayer(layer_GoogleSatellite_0);
+        function pop_KecamatanProbolinggo_1(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">WADMKC</th>\
+                        <td>' + (feature.properties['WADMKC'] !== null ? autolinker.link(String(feature.properties['WADMKC']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">WADMKK</th>\
+                        <td>' + (feature.properties['WADMKK'] !== null ? autolinker.link(String(feature.properties['WADMKK']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Kpd_Pend</th>\
+                        <td>' + (feature.properties['Kpd_Pend'] !== null ? autolinker.link(String(feature.properties['Kpd_Pend']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Luas_Wil</th>\
+                        <td>' + (feature.properties['Luas_Wil'] !== null ? autolinker.link(String(feature.properties['Luas_Wil']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Jml_TBC</th>\
+                        <td>' + (feature.properties['Jml_TBC'] !== null ? autolinker.link(String(feature.properties['Jml_TBC']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_KecamatanProbolinggo_1_0(feature) {
+            switch(String(feature.properties['WADMKC'])) {
+                case 'BANTARAN':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(128,222,136,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'BANYUANYAR':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(211,36,91,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'BESUK':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(187,62,237,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'DRINGU':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(126,199,228,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'GADING':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(206,93,17,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'GENDING':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(82,111,206,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'KOTAANYAR':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(213,154,43,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'KRAKSAAN':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(236,223,125,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'KREJENGAN':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(200,92,178,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'KRUCIL':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(90,238,174,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'KURIPAN':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(233,51,63,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'LECES':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(117,214,195,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'LUMBANG':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(172,131,216,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'MARON':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(187,206,67,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'PAITON':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(35,228,235,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'PAJARAKAN':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(123,225,56,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'PAKUNIRAN':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(76,76,205,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'SUKAPURA':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(209,52,217,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'SUMBER':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(113,86,202,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'SUMBERASIH':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(195,238,119,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'TEGALSIWALAN':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(42,119,200,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'TIRIS':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(231,96,173,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'TONGAS':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(209,46,13,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'WONOMERTO':
+                    return {
+                pane: 'pane_KecamatanProbolinggo_1',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(84,225,59,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_KecamatanProbolinggo_1');
+        map.getPane('pane_KecamatanProbolinggo_1').style.zIndex = 401;
+        map.getPane('pane_KecamatanProbolinggo_1').style['mix-blend-mode'] = 'normal';
+        var layer_KecamatanProbolinggo_1 = new L.geoJson(json_KecamatanProbolinggo_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_KecamatanProbolinggo_1',
+            layerName: 'layer_KecamatanProbolinggo_1',
+            pane: 'pane_KecamatanProbolinggo_1',
+            onEachFeature: pop_KecamatanProbolinggo_1,
+            style: style_KecamatanProbolinggo_1_0,
+        });
+        bounds_group.addLayer(layer_KecamatanProbolinggo_1);
+        map.addLayer(layer_KecamatanProbolinggo_1);
+        function pop_Fasyankes_2(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">id</th>\
+                        <td>' + (feature.properties['id'] !== null ? autolinker.link(String(feature.properties['id']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Alamat</th>\
+                        <td>' + (feature.properties['Alamat'] !== null ? autolinker.link(String(feature.properties['Alamat']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Nomor_Telp</th>\
+                        <td>' + (feature.properties['Nomor_Telp'] !== null ? autolinker.link(String(feature.properties['Nomor_Telp']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Nama</th>\
+                        <td>' + (feature.properties['Nama'] !== null ? autolinker.link(String(feature.properties['Nama']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Jam Buka</th>\
+                        <td>' + (feature.properties['Jam Buka'] !== null ? autolinker.link(String(feature.properties['Jam Buka']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Foto</th>\
+                        <td>' + (feature.properties['Foto'] !== null ? '<img src="images/' + String(feature.properties['Foto']).replace(/[\\/:]/g, '_').trim().replace(/'/g, '\'').replace(/"/g, '&quot;') + '">' : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Fasyankes_2_0(feature) {
+            switch(String(feature.properties['Nama'])) {
+                case 'IHC RS Wonolangan':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,215,93,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Klinik Al-Hikmah':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(113,206,239,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Klinik An-Nisa':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(59,211,32,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Klinik Mitra Sunatan':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(162,116,231,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Klinik Siti Hajar Probolinggo':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(122,107,237,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Nurrizma Clinic':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(100,218,116,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Bago':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(215,238,145,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Gending':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(223,176,75,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Jabungsisir':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(220,72,180,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Krejengan':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(107,208,149,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Maron':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(33,210,157,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Paiton':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(178,92,215,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Pakuniran':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(101,200,20,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Sukapura':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(201,123,71,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Sumber':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(220,46,23,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Wonomerto':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(82,235,232,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'RS Graha Sehat':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(227,38,70,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'RS Rizani':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(205,35,111,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'RSIA Kraksaan':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(23,112,222,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'RSUD Tongas':
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(136,152,232,1.0)',
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_Fasyankes_2',
+                radius: 10.4,
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(226,77,229,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        function style_Fasyankes_2_1(feature) {
+            switch(String(feature.properties['Nama'])) {
+                case 'IHC RS Wonolangan':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'Klinik Al-Hikmah':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'Klinik An-Nisa':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'Klinik Mitra Sunatan':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'Klinik Siti Hajar Probolinggo':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'Nurrizma Clinic':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Bago':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Gending':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Jabungsisir':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Krejengan':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Maron':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Paiton':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Pakuniran':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Sukapura':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Sumber':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'Puskesmas Wonomerto':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'RS Graha Sehat':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'RS Rizani':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'RSIA Kraksaan':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                case 'RSUD Tongas':
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_Fasyankes_2',
+        rotationAngle: 0.0,
+        rotationOrigin: 'center center',
+        icon: L.icon({
+            iconUrl: 'markers/Fasyankes_2.svg',
+            iconSize: [22.799999999999997, 22.799999999999997]
+        }),
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_Fasyankes_2');
+        map.getPane('pane_Fasyankes_2').style.zIndex = 402;
+        map.getPane('pane_Fasyankes_2').style['mix-blend-mode'] = 'normal';
+        var layer_Fasyankes_2 = new L.geoJson.multiStyle(json_Fasyankes_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Fasyankes_2',
+            layerName: 'layer_Fasyankes_2',
+            pane: 'pane_Fasyankes_2',
+            onEachFeature: pop_Fasyankes_2,
+            pointToLayers: [function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_Fasyankes_2_0(feature));
+            },function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.marker(latlng, style_Fasyankes_2_1(feature));
+            },
+        ]});
+        bounds_group.addLayer(layer_Fasyankes_2);
+        map.addLayer(layer_Fasyankes_2);
+        const url = {"Nominatim OSM": "https://nominatim.openstreetmap.org/search?format=geojson&addressdetails=1&",
+        "France BAN": "https://api-adresse.data.gouv.fr/search/?"}
+        var photonControl = L.control.photon({
+            url: url["Nominatim OSM"],
+            feedbackLabel: '',
+            position: 'topleft',
+            includePosition: true,
+            initial: true,
+            // resultsHandler: myHandler,
+        }).addTo(map);
+        photonControl._container.childNodes[0].style.borderRadius="10px"
+        // Create a variable to store the geoJSON data
+        var x = null;
+        // Create a variable to store the marker
+        var marker = null;
+        // Add an event listener to the Photon control to create a marker from the returned geoJSON data
+        var z = null;
+        photonControl.on('selected', function(e) {
+            console.log(photonControl.search.resultsContainer);
+            if (x != null) {
+                map.removeLayer(obj3.marker);
+                map.removeLayer(x);
+            }
+            obj2.gcd = e.choice;
+            x = L.geoJSON(obj2.gcd).addTo(map);
+            var label = typeof obj2.gcd.properties.label === 'undefined' ? obj2.gcd.properties.display_name : obj2.gcd.properties.label;
+            obj3.marker = L.marker(x.getLayers()[0].getLatLng()).bindPopup(label).addTo(map);
+            map.setView(x.getLayers()[0].getLatLng(), 17);
+            z = typeof e.choice.properties.label === 'undefined'? e.choice.properties.display_name : e.choice.properties.label;
+            console.log(e);
+            e.target.input.value = z;
+        });
+        var search = document.getElementsByClassName("leaflet-photon leaflet-control")[0];
+        search.classList.add("leaflet-control-search")
+        search.style.display = "flex";
+        search.style.backgroundColor="rgba(255,255,255,0.5)" 
+
+        // Create the new button element
+        var button = document.createElement("div");
+        button.id = "gcd-button-control";
+        button.className = "gcd-gl-btn fa fa-search search-button";
+
+        // Insert the button at the beginning of the search control
+        search.insertBefore(button, search.firstChild);
+        last = search.lastChild;
+        last.style.display = "none";
+        button.addEventListener("click", function (e) {
+            if (last.style.display === "none") {
+                last.style.display = "block";
+            } else {
+                last.style.display = "none";
+            }
+        });
+        var overlaysTree = [
+            {label: 'Fasyankes<br /><table><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_IHCRSWonolangan0.png" /></td><td>IHC RS Wonolangan</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_KlinikAlHikmah1.png" /></td><td>Klinik Al-Hikmah</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_KlinikAnNisa2.png" /></td><td>Klinik An-Nisa</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_KlinikMitraSunatan3.png" /></td><td>Klinik Mitra Sunatan</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_KlinikSitiHajarProbolinggo4.png" /></td><td>Klinik Siti Hajar Probolinggo</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_NurrizmaClinic5.png" /></td><td>Nurrizma Clinic</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasBago6.png" /></td><td>Puskesmas Bago</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasGending7.png" /></td><td>Puskesmas Gending</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasJabungsisir8.png" /></td><td>Puskesmas Jabungsisir</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasKrejengan9.png" /></td><td>Puskesmas Krejengan</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasMaron10.png" /></td><td>Puskesmas Maron</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasPaiton11.png" /></td><td>Puskesmas Paiton</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasPakuniran12.png" /></td><td>Puskesmas Pakuniran</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasSukapura13.png" /></td><td>Puskesmas Sukapura</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasSumber14.png" /></td><td>Puskesmas Sumber</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasWonomerto15.png" /></td><td>Puskesmas Wonomerto</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_RSGrahaSehat16.png" /></td><td>RS Graha Sehat</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_RSRizani17.png" /></td><td>RS Rizani</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_RSIAKraksaan18.png" /></td><td>RSIA Kraksaan</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_RSUDTongas19.png" /></td><td>RSUD Tongas</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_20.png" /></td><td></td></tr></table>', layer: layer_Fasyankes_2},
+            {label: 'Kecamatan Probolinggo<br /><table><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_BANTARAN0.png" /></td><td>BANTARAN</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_BANYUANYAR1.png" /></td><td>BANYUANYAR</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_BESUK2.png" /></td><td>BESUK</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_DRINGU3.png" /></td><td>DRINGU</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_GADING4.png" /></td><td>GADING</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_GENDING5.png" /></td><td>GENDING</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_KOTAANYAR6.png" /></td><td>KOTAANYAR</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_KRAKSAAN7.png" /></td><td>KRAKSAAN</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_KREJENGAN8.png" /></td><td>KREJENGAN</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_KRUCIL9.png" /></td><td>KRUCIL</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_KURIPAN10.png" /></td><td>KURIPAN</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_LECES11.png" /></td><td>LECES</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_LUMBANG12.png" /></td><td>LUMBANG</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_MARON13.png" /></td><td>MARON</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_PAITON14.png" /></td><td>PAITON</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_PAJARAKAN15.png" /></td><td>PAJARAKAN</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_PAKUNIRAN16.png" /></td><td>PAKUNIRAN</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_SUKAPURA17.png" /></td><td>SUKAPURA</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_SUMBER18.png" /></td><td>SUMBER</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_SUMBERASIH19.png" /></td><td>SUMBERASIH</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_TEGALSIWALAN20.png" /></td><td>TEGALSIWALAN</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_TIRIS21.png" /></td><td>TIRIS</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_TONGAS22.png" /></td><td>TONGAS</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_WONOMERTO23.png" /></td><td>WONOMERTO</td></tr></table>', layer: layer_KecamatanProbolinggo_1},
+            {label: "Google Satellite", layer: layer_GoogleSatellite_0},]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: true,
+        });
+        lay.addTo(map);
+        setBounds();
+        var i = 0;
+        layer_KecamatanProbolinggo_1.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['WADMKC'] !== null?String('<div style="color: #323232; font-size: 10pt; font-family: \'Open Sans\', sans-serif;">' + layer.feature.properties['WADMKC']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_KecamatanProbolinggo_1'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        resetLabels([layer_KecamatanProbolinggo_1]);
+        map.on("zoomend", function(){
+            resetLabels([layer_KecamatanProbolinggo_1]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_KecamatanProbolinggo_1]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_KecamatanProbolinggo_1]);
+        });
+        </script>        
+    </body>
+</html>
