@@ -22,19 +22,17 @@
         }
         </style>
         <title>Peta Sebaran Fasilitas Kesehatan di Kabupaten Probolinggo</title>
-       </head>
+        </head>
     <body>
 <marquee behavior="scroll" direction="left" scrollamount="6" style="color: #800080; font-weight: bold; font-size: 22px; background-color: rgba(255, 255, 255, 0.85); padding: 12px 0px; position: absolute; top: 0; left: 0; z-index: 1000; width: 100%; border-bottom: 1px solid #ccc; box-shadow: 0px 2px 5px rgba(0,0,0,0.1);">
-            PETA SEBARAN FASILITAS KESEHATAN DI KABUPATEN PROBOLINGGO - DINDA AZIZAH ATALLAHSYAH 11231010000042 - PEMINATAN EPIDEMIOLOGI
+            PETA SEBARAN FASILITAS KESEHATAN DI KABUPATEN JEMBER - DINDA AZIZAH ATALLAHSYAH 11231010000042 - PEMINATAN EPIDEMIOLOGI
         </marquee>
 
         <div id="map">
         </div>
-
 <audio controls loop style="position:absolute;bottom:50px;left:30px;z-index:9999;">
     <source src="audio/backsound.mp3" type="audio/mpeg">
 </audio>
-
         <script src="js/qgis2web_expressions.js"></script>
         <script src="js/leaflet.js"></script>
         <script src="js/L.Control.Layers.Tree.min.js"></script>
@@ -54,7 +52,7 @@
         <script>
         var map = L.map('map', {
             zoomControl:false, maxZoom:28, minZoom:1
-        }).fitBounds([[-8.061511590980352,112.89094781017423],[-7.657963748153104,113.71146712469616]]);
+        }).fitBounds([[-7.874729334112116,113.2350669367967],[-7.707046870190181,113.53988747530164]]);
         var hash = new L.Hash(map);
         map.attributionControl.setPrefix('<a href="https://github.com/qgis2web/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
         var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
@@ -209,9 +207,8 @@
         }
 
         function style_KecamatanProbolinggo_1_0(feature) {
-            switch(String(feature.properties['WADMKC'])) {
-                case 'BANTARAN':
-                    return {
+            if (feature.properties['Jml_TBC'] >= 5.000000 && feature.properties['Jml_TBC'] <= 40.000000 ) {
+                return {
                 pane: 'pane_KecamatanProbolinggo_1',
                 opacity: 1,
                 color: 'rgba(35,35,35,1.0)',
@@ -221,12 +218,12 @@
                 weight: 1.0, 
                 fill: true,
                 fillOpacity: 1,
-                fillColor: 'rgba(128,222,136,1.0)',
+                fillColor: 'rgba(249,240,255,1.0)',
                 interactive: true,
             }
-                    break;
-                case 'BANYUANYAR':
-                    return {
+            }
+            if (feature.properties['Jml_TBC'] >= 40.000000 && feature.properties['Jml_TBC'] <= 68.800000 ) {
+                return {
                 pane: 'pane_KecamatanProbolinggo_1',
                 opacity: 1,
                 color: 'rgba(35,35,35,1.0)',
@@ -236,12 +233,12 @@
                 weight: 1.0, 
                 fill: true,
                 fillOpacity: 1,
-                fillColor: 'rgba(211,36,91,1.0)',
+                fillColor: 'rgba(187,169,204,1.0)',
                 interactive: true,
             }
-                    break;
-                case 'BESUK':
-                    return {
+            }
+            if (feature.properties['Jml_TBC'] >= 68.800000 && feature.properties['Jml_TBC'] <= 97.000000 ) {
+                return {
                 pane: 'pane_KecamatanProbolinggo_1',
                 opacity: 1,
                 color: 'rgba(35,35,35,1.0)',
@@ -251,12 +248,12 @@
                 weight: 1.0, 
                 fill: true,
                 fillOpacity: 1,
-                fillColor: 'rgba(187,62,237,1.0)',
+                fillColor: 'rgba(149,38,219,1.0)',
                 interactive: true,
             }
-                    break;
-                case 'DRINGU':
-                    return {
+            }
+            if (feature.properties['Jml_TBC'] >= 97.000000 && feature.properties['Jml_TBC'] <= 123.600000 ) {
+                return {
                 pane: 'pane_KecamatanProbolinggo_1',
                 opacity: 1,
                 color: 'rgba(35,35,35,1.0)',
@@ -266,12 +263,12 @@
                 weight: 1.0, 
                 fill: true,
                 fillOpacity: 1,
-                fillColor: 'rgba(126,199,228,1.0)',
+                fillColor: 'rgba(95,43,140,1.0)',
                 interactive: true,
             }
-                    break;
-                case 'GADING':
-                    return {
+            }
+            if (feature.properties['Jml_TBC'] >= 123.600000 && feature.properties['Jml_TBC'] <= 254.000000 ) {
+                return {
                 pane: 'pane_KecamatanProbolinggo_1',
                 opacity: 1,
                 color: 'rgba(35,35,35,1.0)',
@@ -281,295 +278,9 @@
                 weight: 1.0, 
                 fill: true,
                 fillOpacity: 1,
-                fillColor: 'rgba(206,93,17,1.0)',
+                fillColor: 'rgba(73,0,78,1.0)',
                 interactive: true,
             }
-                    break;
-                case 'GENDING':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(82,111,206,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'KOTAANYAR':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(213,154,43,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'KRAKSAAN':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(236,223,125,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'KREJENGAN':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(200,92,178,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'KRUCIL':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(90,238,174,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'KURIPAN':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(233,51,63,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'LECES':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(117,214,195,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'LUMBANG':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(172,131,216,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'MARON':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(187,206,67,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'PAITON':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(35,228,235,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'PAJARAKAN':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(123,225,56,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'PAKUNIRAN':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(76,76,205,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'SUKAPURA':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(209,52,217,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'SUMBER':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(113,86,202,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'SUMBERASIH':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(195,238,119,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'TEGALSIWALAN':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(42,119,200,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'TIRIS':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(231,96,173,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'TONGAS':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(209,46,13,1.0)',
-                interactive: true,
-            }
-                    break;
-                case 'WONOMERTO':
-                    return {
-                pane: 'pane_KecamatanProbolinggo_1',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(84,225,59,1.0)',
-                interactive: true,
-            }
-                    break;
             }
         }
         map.createPane('pane_KecamatanProbolinggo_1');
@@ -611,6 +322,10 @@
                     <tr>\
                         <th scope="row">Foto</th>\
                         <td>' + (feature.properties['Foto'] !== null ? '<img src="images/' + String(feature.properties['Foto']).replace(/[\\/:]/g, '_').trim().replace(/'/g, '\'').replace(/"/g, '&quot;') + '">' : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Ttk_Koord</th>\
+                        <td>' + (feature.properties['Ttk_Koord'] !== null ? autolinker.link(String(feature.properties['Ttk_Koord']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
                     </tr>\
                 </table>';
             var content = removeEmptyRowsFromPopupContent(popupContent, feature);
@@ -1297,7 +1012,7 @@
         });
         var overlaysTree = [
             {label: 'Fasyankes<br /><table><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_IHCRSWonolangan0.png" /></td><td>IHC RS Wonolangan</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_KlinikAlHikmah1.png" /></td><td>Klinik Al-Hikmah</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_KlinikAnNisa2.png" /></td><td>Klinik An-Nisa</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_KlinikMitraSunatan3.png" /></td><td>Klinik Mitra Sunatan</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_KlinikSitiHajarProbolinggo4.png" /></td><td>Klinik Siti Hajar Probolinggo</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_NurrizmaClinic5.png" /></td><td>Nurrizma Clinic</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasBago6.png" /></td><td>Puskesmas Bago</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasGending7.png" /></td><td>Puskesmas Gending</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasJabungsisir8.png" /></td><td>Puskesmas Jabungsisir</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasKrejengan9.png" /></td><td>Puskesmas Krejengan</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasMaron10.png" /></td><td>Puskesmas Maron</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasPaiton11.png" /></td><td>Puskesmas Paiton</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasPakuniran12.png" /></td><td>Puskesmas Pakuniran</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasSukapura13.png" /></td><td>Puskesmas Sukapura</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasSumber14.png" /></td><td>Puskesmas Sumber</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_PuskesmasWonomerto15.png" /></td><td>Puskesmas Wonomerto</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_RSGrahaSehat16.png" /></td><td>RS Graha Sehat</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_RSRizani17.png" /></td><td>RS Rizani</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_RSIAKraksaan18.png" /></td><td>RSIA Kraksaan</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_RSUDTongas19.png" /></td><td>RSUD Tongas</td></tr><tr><td style="text-align: center;"><img src="legend/Fasyankes_2_20.png" /></td><td></td></tr></table>', layer: layer_Fasyankes_2},
-            {label: 'Kecamatan Probolinggo<br /><table><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_BANTARAN0.png" /></td><td>BANTARAN</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_BANYUANYAR1.png" /></td><td>BANYUANYAR</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_BESUK2.png" /></td><td>BESUK</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_DRINGU3.png" /></td><td>DRINGU</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_GADING4.png" /></td><td>GADING</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_GENDING5.png" /></td><td>GENDING</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_KOTAANYAR6.png" /></td><td>KOTAANYAR</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_KRAKSAAN7.png" /></td><td>KRAKSAAN</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_KREJENGAN8.png" /></td><td>KREJENGAN</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_KRUCIL9.png" /></td><td>KRUCIL</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_KURIPAN10.png" /></td><td>KURIPAN</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_LECES11.png" /></td><td>LECES</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_LUMBANG12.png" /></td><td>LUMBANG</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_MARON13.png" /></td><td>MARON</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_PAITON14.png" /></td><td>PAITON</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_PAJARAKAN15.png" /></td><td>PAJARAKAN</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_PAKUNIRAN16.png" /></td><td>PAKUNIRAN</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_SUKAPURA17.png" /></td><td>SUKAPURA</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_SUMBER18.png" /></td><td>SUMBER</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_SUMBERASIH19.png" /></td><td>SUMBERASIH</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_TEGALSIWALAN20.png" /></td><td>TEGALSIWALAN</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_TIRIS21.png" /></td><td>TIRIS</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_TONGAS22.png" /></td><td>TONGAS</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_WONOMERTO23.png" /></td><td>WONOMERTO</td></tr></table>', layer: layer_KecamatanProbolinggo_1},
+            {label: 'Kecamatan Probolinggo<br /><table><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_5400.png" /></td><td>5 - 40</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_40691.png" /></td><td>40 - 69</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_69972.png" /></td><td>69 - 97</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_971243.png" /></td><td>97 - 124</td></tr><tr><td style="text-align: center;"><img src="legend/KecamatanProbolinggo_1_1242544.png" /></td><td>124 - 254</td></tr></table>', layer: layer_KecamatanProbolinggo_1},
             {label: "Google Satellite", layer: layer_GoogleSatellite_0},]
         var lay = L.control.layers.tree(null, overlaysTree,{
             //namedToggle: true,
